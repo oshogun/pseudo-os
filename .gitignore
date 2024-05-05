@@ -1,4 +1,4 @@
-src/js/*.js
+*.js
 # Logs
 logs
 *.log
