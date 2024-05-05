@@ -1,4 +1,4 @@
-import Command from "./command";
+import Command from "../command";
 
 class EchoCommand extends Command {
     run = (args: string[]): string => {

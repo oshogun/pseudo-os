@@ -2,12 +2,12 @@ import express from 'express';
 
 import FileSystem from './filesystem';
 import CommandRegistry from './commandregistry';
-import LsCommand from './lscommand';
-import PwdCommand from './pwdcommand';
-import MkdirCommand from './mkdircommand';
-import TouchCommand from './touchcommand';
-import CatCommand from './catcommand';
-import EchoCommand from './echocommand';
+import LsCommand from './commands/lscommand';
+import PwdCommand from './commands/pwdcommand';
+import MkdirCommand from './commands/mkdircommand';
+import TouchCommand from './commands/touchcommand';
+import CatCommand from './commands/catcommand';
+import EchoCommand from './commands/echocommand';
 
 
 let commandRegistry = new CommandRegistry();
@@ -31,7 +31,17 @@ function handleCommand(cmd: string): string {
     let previousOutput = '';
 
     for (let i = 0; i < commands.length; i++) {
-        const command = commands[i];
+        let command = commands[i];
+        let redirectSymbol = command.includes('>>') ? '>>' : command.includes('>') ? '>' : null;
+        let fileName = '';
+
+
+        if (redirectSymbol) {
+            const parts = command.split(redirectSymbol);
+            command = parts[0];
+            fileName = parts[1].trim();
+        }
+
         const commandParts = command.match(/(?:[^\s"]+|"[^"]*")+/g); // Split command by spaces, but preserve quoted strings
 
         if (!commandParts) {
@@ -51,6 +61,17 @@ function handleCommand(cmd: string): string {
             } else {
                 currentOutput = currentCommand.run(previousOutput.split(' '), fileSystem as FileSystem);
             }
+
+            if (redirectSymbol) {
+                if (redirectSymbol === '>') {
+
+                    fileSystem.createFile(fileName, currentOutput);
+                } else {
+
+                    fileSystem.appendToFile(fileName, currentOutput);
+                }
+                currentOutput = '';
+            }
         } else {
             currentOutput = 'command not found';
         }
@@ -61,7 +82,7 @@ function handleCommand(cmd: string): string {
 
     return output;
 }
-    
+
 
 const app = express();
 const port = 3000;

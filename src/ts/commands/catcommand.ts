@@ -1,6 +1,6 @@
-import Command from "./command";
-import Directory from "./directory";
-import FileSystem from "./filesystem";
+import Command from "../command";
+import Directory from "../directory";
+import FileSystem from "../filesystem";
 
 class CatCommand extends Command {
     run = (args: string[], fileSystem: FileSystem): string => {

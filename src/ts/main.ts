@@ -1,6 +1,6 @@
 import CommandRegistry from "./commandregistry";
 import FileSystem from "./filesystem";
-import LsCommand from "./lscommand";
+import LsCommand from "./commands/lscommand";
 
 
 let commandRegistry = new CommandRegistry();

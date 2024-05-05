@@ -1,5 +1,5 @@
-import Command from "./command";
-import FileSystem from "./filesystem";
+import Command from "../command";
+import FileSystem from "../filesystem";
 
 class PwdCommand extends Command {
     run = (args: string[], fileSystem: FileSystem): string => {
