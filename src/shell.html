@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+
+    <h2>Simulated Shell Environment</h2>
+
+    <input type="text" id="commandInput" placeholder="Enter command">
+    <div id="commandOutput"></div>
+
+    <script>
+        let commandInput = document.getElementById('commandInput');
+        let commandOutput = document.getElementById('commandOutput');
+
+        commandInput.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                let command = commandInput.value;
+                commandInput.value = '';
+                let [cmd, ...args] = command.split(' ');
+                handleCommand(cmd, args);
+            }
+        });
+
+        function handleCommand(cmd, args) {
+            let output;
+            switch (cmd) {
+                case 'ls':
+                    output = 'file1 file2 file3';
+                    break;
+                case 'pwd':
+                    output = '/home/user';
+                    break;
+                default:
+                    output = 'command not found';
+            }
+            commandOutput.innerText += '$ ' + cmd + '\n' + output + '\n';
+        }
+    </script>
+
+</body>
+
+</html>

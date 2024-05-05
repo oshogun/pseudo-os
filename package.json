@@ -1,0 +1,17 @@
+{
+  "name": "pseudo-os",
+  "version": "0.0.1",
+  "description": "A simulated shell environment",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Guilherme Cardoso",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21"
+  }
+}
