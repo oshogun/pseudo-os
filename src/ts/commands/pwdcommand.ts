@@ -3,7 +3,7 @@ import FileSystem from "../filesystem";
 
 class PwdCommand extends Command {
     run = (args: string[], fileSystem: FileSystem): string => {
-        return fileSystem.currentDirectory.name;
+        return fileSystem.currentDirectory.path;
     }
 }
 

@@ -1,10 +1,14 @@
+import Directory from "./directory";
+
 class File {
     name: string;
     content: string;
+    parent: Directory | null;
 
-    constructor(name: string, content = '') {
+    constructor(name: string, content = '', parent: Directory | null) {
         this.name = name;
         this.content = content;
+        this.parent = parent;
     }
 
     read(): string {

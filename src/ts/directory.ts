@@ -2,11 +2,14 @@ import File from "./file";
 
 class Directory extends File {
     files: { [name: string]: File };
+    path: string;
 
-    constructor(name: string) {
-        super(name);
+    constructor(name: string, parent: Directory | null) {
+        super(name, '', parent);
         this.files = {};
+        this.path = parent ? (parent.path === '/' ? `${parent.path}${name}` : `${parent.path}/${name}`) : `${name}`;
     }
+
 
     addFile(file: File): void {
         this.files[file.name] = file;

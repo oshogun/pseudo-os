@@ -1,28 +1,18 @@
 import express from 'express';
 
 import FileSystem from './filesystem';
-import CommandRegistry from './commandregistry';
-import LsCommand from './commands/lscommand';
-import PwdCommand from './commands/pwdcommand';
-import MkdirCommand from './commands/mkdircommand';
-import TouchCommand from './commands/touchcommand';
-import CatCommand from './commands/catcommand';
-import EchoCommand from './commands/echocommand';
+import CommandConfig from './commandconfig';
 
 
-let commandRegistry = new CommandRegistry();
-commandRegistry.registerCommand('ls', new LsCommand());
-commandRegistry.registerCommand('pwd', new PwdCommand());
-commandRegistry.registerCommand('mkdir', new MkdirCommand());
-commandRegistry.registerCommand('touch', new TouchCommand());
-commandRegistry.registerCommand('cat', new CatCommand());
-commandRegistry.registerCommand('echo', new EchoCommand());
+
+
 
 const fileSystem = new FileSystem();
+
 fileSystem.createFile('file1', 'content1');
 fileSystem.createFile('file2', 'content2');
 fileSystem.createFile('file3', 'content3');
-
+let commandRegistry = new CommandConfig(fileSystem).getCommands();
 
 function handleCommand(cmd: string): string {
     const commands = cmd.split('|').map(c => c.trim()); // Split commands by pipe symbol and remove leading/trailing spaces
@@ -92,6 +82,7 @@ app.use(express.json());
 app.post('/execute', (req: express.Request, res: express.Response) => {
     const { command } = req.body;
     let result: string = handleCommand(command);
+    console.log('executing command: ' + command);
     res.send(result);
 });
 
