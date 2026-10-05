@@ -36,7 +36,7 @@ Other scripts:
 
 - Quoting: `"double"` (expands variables), `'single'` (literal), `back\ slash`
 - Pipes `|` pass stdout to the next command's stdin
-- Redirects: `>` `>>` `<` `2>` `2>>`
+- Redirects: `>` `>>` `<` `2>` `2>>` `2>&1`
 - Command lists: `;`, `&&`, `||`, plus `$?` for the last exit code
 - Variables: `$NAME`, `${NAME}`, set with `export NAME=value`
 - `~` expands to `$HOME`. `*` and `?` glob against the filesystem; a pattern

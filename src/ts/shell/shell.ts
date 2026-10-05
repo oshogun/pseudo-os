@@ -109,6 +109,10 @@ class Shell {
                     continue;
                 }
                 this.lastExitCode = this.runPipeline(item.pipeline, terminal);
+                // rm -r can move the filesystem out of a deleted directory.
+                if (this.env.get('PWD') !== this.fs.cwd) {
+                    this.env.set('PWD', this.fs.cwd);
+                }
             }
         }
 
@@ -138,8 +142,14 @@ class Shell {
         // Redirect targets; '>' and '2>' truncate up front, so output is always appended.
         let redirectOut: string | null = null;
         let redirectErr: string | null = null;
+        // 2>&1 sends stderr wherever stdout goes, wherever it appears in the command.
+        let errToOut = false;
 
         for (const redirect of command.redirects) {
+            if (redirect.op === '2>&1') {
+                errToOut = true;
+                continue;
+            }
             const targets = this.expand(redirect.target);
             if (targets.length !== 1) {
                 terminal.errors().writeln(`pseudo-sh: ${redirect.target.map(p => p.text).join('')}: ambiguous redirect`);
@@ -171,7 +181,7 @@ class Shell {
 
         let exitCode = 0;
         const out = redirectOut ? new Output() : stdout;
-        const stderr = redirectErr ? new Output() : terminal.errors();
+        const stderr = errToOut ? out : redirectErr ? new Output() : terminal.errors();
         if (argv.length > 0) {
             exitCode = this.invoke(argv, stdin, out, stderr, interactive && !redirectOut);
         }
@@ -190,7 +200,7 @@ class Shell {
         if (redirectOut) {
             flush(redirectOut, out.toString());
         }
-        if (redirectErr) {
+        if (redirectErr && !errToOut) {
             flush(redirectErr, stderr.toString());
         }
         return exitCode;
@@ -203,7 +213,7 @@ class Shell {
             stderr.writeln(`${name}: command not found`);
             return 127;
         }
-        if (args[0] === '--help') {
+        if (args[0] === '--help' && name !== 'echo') {
             stdout.writeln(`usage: ${name} ${command.usage}`.trimEnd());
             stdout.writeln(command.description);
             return 0;

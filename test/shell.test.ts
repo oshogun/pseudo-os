@@ -94,4 +94,23 @@ describe('shell', () => {
         expect(restored.history).toEqual(shell.history);
         expect(restored.execute('pwd; cat f; echo $X').output).toBe('/home/user/saved\ndata\n1\n');
     });
+
+    it('supports 2>&1', () => {
+        const { run, shell } = setup();
+        expect(run('cat missing 2>&1 | wc -l')).toBe('1\n');
+        run('cat notes.txt missing > both 2>&1');
+        expect(run('tail -n 1 both')).toBe('cat: missing: No such file or directory\n');
+        expect(shell.fs.exists('&1')).toBe(false);
+    });
+
+    it('keeps $PWD in sync when the current directory is removed', () => {
+        const { run } = setup();
+        run('mkdir gone && cd gone && rm -r ../gone');
+        expect(run('echo $PWD')).toBe('/home/user\n');
+    });
+
+    it('lets echo print --help', () => {
+        const { run } = setup();
+        expect(run('echo --help')).toBe('--help\n');
+    });
 });

@@ -3,7 +3,7 @@
 //   list      := pipeline ((';' | '&&' | '||') pipeline)* [';']
 //   pipeline  := command ('|' command)*
 //   command   := (word | redirect)+
-//   redirect  := ('>' | '>>' | '<' | '2>' | '2>>') word
+//   redirect  := ('>' | '>>' | '<' | '2>' | '2>>') word | '2>&1'
 //
 // Words keep track of how each piece was quoted so that variable expansion,
 // tilde expansion and globbing can be applied later, at execution time.
@@ -17,7 +17,7 @@ export interface WordPart {
 
 export type Word = WordPart[];
 
-export type RedirectOp = '>' | '>>' | '<' | '2>' | '2>>';
+export type RedirectOp = '>' | '>>' | '<' | '2>' | '2>>' | '2>&1';
 export type Connector = ';' | '&&' | '||';
 type Operator = RedirectOp | Connector | '|';
 
@@ -43,7 +43,7 @@ type Token = { type: 'word'; word: Word } | { type: 'op'; op: Operator };
 
 export class ParseError extends Error {}
 
-const operators: Operator[] = ['2>>', '&&', '||', '>>', '2>', '>', '<', '|', ';'];
+const operators: Operator[] = ['2>&1', '2>>', '&&', '||', '>>', '2>', '>', '<', '|', ';'];
 
 export function tokenize(input: string): Token[] {
     const tokens: Token[] = [];
@@ -157,6 +157,9 @@ export function parse(input: string): ListItem[] {
             const token = tokens[pos];
             if (token.type === 'word') {
                 command.words.push(token.word);
+                pos++;
+            } else if (token.op === '2>&1') {
+                command.redirects.push({ op: '2>&1', target: [] });
                 pos++;
             } else if (['>', '>>', '<', '2>', '2>>'].includes(token.op)) {
                 const target = tokens[pos + 1];
