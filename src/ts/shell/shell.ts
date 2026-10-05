@@ -310,11 +310,13 @@ class Shell {
                 stderr.writeln(`pseudo-sh: ${name}: cannot execute: ${error.message}`);
                 return 126;
             }
-            if (error instanceof WebAssembly.RuntimeError || error instanceof Error) {
+            if (error instanceof WebAssembly.RuntimeError) {
                 stderr.writeln(`${name}: crashed: ${error.message}`);
                 return 134;
             }
-            throw error;
+            // Anything else is a bug in pseudo-os (e.g. in the WASI layer), not in the program.
+            stderr.writeln(`pseudo-sh: ${name}: internal error: ${error instanceof Error ? error.message : String(error)}`);
+            return 70;
         } finally {
             stdout.write(outDecoder.decode());
             stderr.write(errDecoder.decode());

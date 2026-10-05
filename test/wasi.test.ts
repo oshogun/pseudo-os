@@ -108,4 +108,11 @@ describe('WebAssembly programs', () => {
         expect(run('which wcat')).toBe('/bin/wcat\n');
         expect(complete(shell, 'hel', 3).options).toEqual(['hello', 'help']);
     });
+
+    it('reinstalls bundled programs after reset', () => {
+        const { shell } = setup();
+        shell.execute('rm /bin/hello');
+        shell.execute('reset --yes');
+        expect(shell.execute('hello').output).toBe('Hello, world!\n');
+    });
 });
