@@ -54,8 +54,25 @@ export function createDefaultFileSystem(commands: string[]): FileSystem {
 
 const defaultEnv = { HOME, USER, HOSTNAME: 'pseudo-os', SHELL: '/bin/pseudo-sh', PATH: '/bin' };
 
-// Creates a shell, restoring saved state when given.
-export function createShell(saved?: SerializedShell): Shell {
+// WebAssembly programs installed in /bin, by name.
+export type Programs = { [name: string]: Uint8Array<ArrayBuffer> };
+
+// Writes the bundled programs into /bin, replacing older copies.
+function installPrograms(fs: FileSystem, programs: Programs): void {
+    if (!fs.isDirectory('/bin')) {
+        fs.createDirectory('/bin', true);
+    }
+    for (const [name, bytes] of Object.entries(programs)) {
+        const path = `/bin/${name}`;
+        if (!fs.isDirectory(path)) {
+            fs.writeFile(path, bytes);
+        }
+    }
+}
+
+// Creates a shell, restoring saved state when given. `programs` are
+// (re)installed into /bin either way, so saved systems pick up new versions.
+export function createShell(saved?: SerializedShell, programs: Programs = {}): Shell {
     const registry = new CommandConfig().getCommands();
     let shell: Shell;
     if (saved) {
@@ -64,8 +81,10 @@ export function createShell(saved?: SerializedShell): Shell {
     } else {
         shell = new Shell(createDefaultFileSystem(registry.names()), registry, defaultEnv);
     }
+    installPrograms(shell.fs, programs);
     shell.factoryReset = () => {
         shell.fs = createDefaultFileSystem(registry.names());
+        installPrograms(shell.fs, programs);
         shell.env = new Map(Object.entries(defaultEnv));
         shell.env.set('PWD', shell.fs.cwd);
         shell.history.length = 0;

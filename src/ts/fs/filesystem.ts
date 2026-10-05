@@ -1,5 +1,5 @@
 import Directory from "./directory";
-import File from "./file";
+import File, { FileContent } from "./file";
 import * as Path from "./path";
 
 export type FsErrorCode = 'ENOENT' | 'ENOTDIR' | 'EISDIR' | 'EEXIST' | 'ENOTEMPTY' | 'EINVAL';
@@ -25,8 +25,9 @@ export class FsError extends Error {
 }
 
 // Plain-object form of the tree, used to persist a filesystem as JSON.
+// Binary files carry `base64` instead of `content`.
 export type SerializedNode =
-    | { type: 'file'; name: string; content: string; modified: number }
+    | { type: 'file'; name: string; content?: string; base64?: string; modified: number }
     | { type: 'dir'; name: string; modified: number; children: SerializedNode[] };
 
 export interface SerializedFileSystem {
@@ -123,8 +124,16 @@ class FileSystem {
         return node.read();
     }
 
+    readBytes(path: string): Uint8Array<ArrayBuffer> {
+        const node = this.get(path);
+        if (node instanceof Directory) {
+            throw new FsError('EISDIR', path);
+        }
+        return node.bytes;
+    }
+
     // Creates the file if needed and replaces its content.
-    writeFile(path: string, content: string): void {
+    writeFile(path: string, content: FileContent): void {
         const existing = this.find(path);
         if (existing instanceof Directory) {
             throw new FsError('EISDIR', path);
@@ -138,7 +147,7 @@ class FileSystem {
     }
 
     // Creates the file if needed and appends to it.
-    appendFile(path: string, content: string): void {
+    appendFile(path: string, content: FileContent): void {
         const existing = this.find(path);
         if (existing instanceof Directory) {
             throw new FsError('EISDIR', path);
@@ -287,7 +296,7 @@ function clone(node: File, name: string): File {
         }
         return copy;
     }
-    return new File(name, node.content);
+    return new File(name, node.isBinary ? node.bytes.slice() : node.content);
 }
 
 function serializeNode(node: File): SerializedNode {
@@ -298,6 +307,9 @@ function serializeNode(node: File): SerializedNode {
             modified: node.modified,
             children: [...node.files.values()].map(serializeNode),
         };
+    }
+    if (node.isBinary) {
+        return { type: 'file', name: node.name, base64: toBase64(node.bytes), modified: node.modified };
     }
     return { type: 'file', name: node.name, content: node.content, modified: node.modified };
 }
@@ -311,10 +323,27 @@ function deserializeNode(data: SerializedNode): File {
         }
         node = dir;
     } else {
-        node = new File(data.name, data.content);
+        node = new File(data.name, data.base64 !== undefined ? fromBase64(data.base64) : data.content ?? '');
     }
     node.modified = data.modified;
     return node;
+}
+
+function toBase64(bytes: Uint8Array): string {
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    }
+    return btoa(binary);
+}
+
+function fromBase64(text: string): Uint8Array<ArrayBuffer> {
+    const binary = atob(text);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
 }
 
 export default FileSystem;
