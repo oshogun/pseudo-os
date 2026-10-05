@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+      # package-lock.json is not committed, so npm ci and the npm cache are unavailable.
+      - run: npm install
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  # Rebuilds the .wasm files with the pinned wasi-sdk and fails if a committed one differs, a .c has none, or a .wasm has no .c.
+  wasm:
+    runs-on: ubuntu-latest
+    env:
+      WASI_SDK_VERSION: "34"
+      WASI_SDK_SHA256: b761e3a0721dbae9c09a0059e5fdb2bf917d1b4a8a7b430fb3b5aafb0984b2c4
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install wasi-sdk
+        run: |
+          archive="wasi-sdk-${WASI_SDK_VERSION}.0-x86_64-linux.tar.gz"
+          curl -fsSL -o "$RUNNER_TEMP/$archive" \
+            "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${WASI_SDK_VERSION}/$archive"
+          echo "$WASI_SDK_SHA256  $RUNNER_TEMP/$archive" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP"
+      - name: Check every .wasm has a .c source
+        run: |
+          status=0
+          for wasm in src/programs/*.wasm test/fixtures/wasm/*.wasm; do
+            [ -e "$wasm" ] || continue
+            if [ ! -f "${wasm%.wasm}.c" ]; then
+              echo "::error file=$wasm::$wasm has no .c source; delete it or restore its source."
+              status=1
+            fi
+          done
+          exit "$status"
+      - name: Rebuild the .wasm files
+        run: WASI_SDK="$RUNNER_TEMP/wasi-sdk-${WASI_SDK_VERSION}.0-x86_64-linux" scripts/build-wasm.sh
+      - name: Check the committed .wasm files are unchanged
+        run: |
+          changes="$(git status --porcelain -- '*.wasm')"
+          if [ -n "$changes" ]; then
+            echo "$changes"
+            git diff --stat -- '*.wasm'
+            echo "::error::Committed .wasm files differ from scripts/build-wasm.sh output with wasi-sdk ${WASI_SDK_VERSION}, or a .c has no committed .wasm; run scripts/build-wasm.sh and commit the result."
+            exit 1
+          fi
