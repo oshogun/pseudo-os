@@ -1,9 +1,11 @@
-import Command from "../command";
-import FileSystem from "../filesystem";
+import Command, { CommandContext } from "../command";
 
 class PwdCommand extends Command {
-    run = (args: string[], fileSystem: FileSystem): string => {
-        return fileSystem.currentDirectory.path;
+    description = 'print the current directory';
+
+    run = (ctx: CommandContext): number => {
+        ctx.stdout.writeln(ctx.fs.cwd);
+        return 0;
     }
 }
 

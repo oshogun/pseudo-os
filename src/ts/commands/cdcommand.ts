@@ -1,28 +1,24 @@
-import Command from "../command";
-import FileSystem from "../filesystem";
+import Command, { CommandContext } from "../command";
 
 class CdCommand extends Command {
-    private fs: FileSystem;
-    constructor(fileSystem: FileSystem) {
-        super();
-        this.fs = fileSystem;
-    }
-    run = (args: string[]): string => {
-        if (args.length !== 1) {
-            return 'Usage: cd <directory>';
+    description = 'change the current directory';
+    usage = '[directory | -]';
+
+    run = (ctx: CommandContext): number => {
+        if (ctx.args.length > 1) {
+            ctx.stderr.writeln('cd: too many arguments');
+            return 1;
         }
-        const directory = args[0];
-        if (directory === '.') {
-            return `cd ${args.join(' ')}`;
-        } else if (directory === '..') {
-            this.fs.changeDirectory('..');
-            return `cd ${args.join(' ')}`;
-        } else {
-            this.fs.changeDirectory(directory);
-            return `cd ${args.join(' ')}`;
+        let target = ctx.args[0] ?? ctx.shell.home;
+        if (target === '-') {
+            target = ctx.shell.env.get('OLDPWD') ?? ctx.fs.cwd;
+            ctx.shell.changeDirectory(target);
+            ctx.stdout.writeln(ctx.fs.cwd);
+            return 0;
         }
+        ctx.shell.changeDirectory(target);
+        return 0;
     }
-    
 }
 
 export default CdCommand;

@@ -1,17 +1,16 @@
-import Command from "../command";
-import FileSystem from "../filesystem";
+import Command, { CommandContext } from "../command";
+import { parseOptions, UsageError } from "../shell/options";
 
 class MkdirCommand extends Command {
-    run = (args: string[], fileSystem: FileSystem): string => {
-        if (args.length < 1) {
-            return 'Usage: mkdir <directory1> [<directory2> ...]';
-        }
-        
-        args.forEach(directory => {
-            fileSystem.createDirectory(directory);
-        });
+    description = 'create directories';
+    usage = '[-p] <directory>...';
 
-        return '';
+    run = (ctx: CommandContext): number => {
+        const { flags, operands } = parseOptions(ctx.args, 'p');
+        if (operands.length < 1) {
+            throw new UsageError('missing operand');
+        }
+        return this.forEach(ctx, 'mkdir', operands, dir => ctx.fs.createDirectory(dir, flags.has('p')));
     }
 }
 

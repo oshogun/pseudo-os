@@ -1,21 +1,23 @@
-import Command from "../command";
-import Directory from "../directory";
-import FileSystem from "../filesystem";
+import Command, { CommandContext, lines } from "../command";
+import { parseOptions } from "../shell/options";
 
 class CatCommand extends Command {
-    run = (args: string[], fileSystem: FileSystem): string => {
-        let output = '';
-        const file = fileSystem.currentDirectory.getFile(args[0]);
-        if(file instanceof Directory) {
-            return 'cat: ' + args[0] + ': Is a directory';
-        }
-        if (file) {
-            output = file.read();
-        } else {
-            output = 'file not found';
-        }
-        return output;
+    description = 'print files (or stdin) to stdout';
+    usage = '[-n] [file...]';
+
+    run = (ctx: CommandContext): number => {
+        const { flags, operands } = parseOptions(ctx.args, 'n');
+        let lineNumber = 0;
+        return this.readInputs(ctx, 'cat', operands, text => {
+            if (flags.has('n')) {
+                for (const line of lines(text)) {
+                    ctx.stdout.writeln(`${String(++lineNumber).padStart(6)}  ${line}`);
+                }
+            } else {
+                ctx.stdout.write(text);
+            }
+        });
     }
 }
 
-export default CatCommand; 
+export default CatCommand;
