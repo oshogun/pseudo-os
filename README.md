@@ -5,7 +5,8 @@ pseudo-os is a Unix-like shell and in-memory filesystem written in TypeScript.
 The whole thing runs client-side in the browser. It can run real programs
 compiled to WebAssembly (WASI), such as C built with wasi-sdk. Your files,
 environment variables and command history are saved in the browser
-(IndexedDB), so they survive a reload.
+(IndexedDB), so they survive a reload. If the browser cannot save them (storage
+full or blocked), the terminal prints a warning.
 
 ```
 user@pseudo-os:~$ cat notes.txt | grep -n write

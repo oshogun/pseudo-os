@@ -10,25 +10,40 @@ import { loadState, saveState } from "./storage";
 // Saves are queued so they land in order and a slow one can't overwrite a newer state.
 let saving: Promise<unknown> = Promise.resolve();
 
-function save(shell: Shell): void {
+// True after a failed save has been reported, until a later save succeeds, so a run of failures warns once.
+let warned = false;
+
+// `warn` is called when a save fails and the failure has not been reported yet.
+function save(shell: Shell, warn: () => void): void {
     const state = shell.serialize();
-    saving = saving.then(() => saveState(state));
+    saving = saving.then(() => saveState(state)).then(saved => {
+        if (saved) {
+            warned = false;
+        } else if (!warned) {
+            warned = true;
+            warn();
+        }
+    }).catch(() => {
+        // A failure while reporting must not leave `saving` rejected, or later saves would be skipped.
+    });
 }
 
-async function boot(): Promise<Shell> {
+// `keepSaved` is true when saved state existed but could not be loaded: it stays in storage untouched until the first command saves.
+async function boot(): Promise<{ shell: Shell, keepSaved: boolean }> {
     const saved = await loadState();
     if (saved) {
         try {
-            return createShell(saved, programs);
+            return { shell: createShell(saved, programs), keepSaved: false };
         } catch {
             // Saved state from an incompatible version: start fresh.
+            return { shell: createShell(undefined, programs), keepSaved: true };
         }
     }
-    return createShell(undefined, programs);
+    return { shell: createShell(undefined, programs), keepSaved: false };
 }
 
 async function main(): Promise<void> {
-    const shell = await boot();
+    const { shell, keepSaved } = await boot();
 
     const screen = document.getElementById('screen')!;
     const scrollback = document.getElementById('scrollback')!;
@@ -80,6 +95,13 @@ async function main(): Promise<void> {
         screen.scrollTop = screen.scrollHeight;
     }
 
+    function saveAndWarn(): void {
+        save(shell, () => {
+            print('pseudo-os: could not save your files (browser storage is full or blocked); changes will be lost on reload\n', 'error');
+            scrollToEnd();
+        });
+    }
+
     // Index into shell.history while browsing with the arrow keys; history.length means "the new line".
     let historyIndex = shell.history.length;
     let draft = '';
@@ -94,7 +116,7 @@ async function main(): Promise<void> {
         historyIndex = shell.history.length;
         draft = '';
         updatePrompt();
-        save(shell);
+        saveAndWarn();
         scrollToEnd();
     }
 
@@ -171,13 +193,17 @@ async function main(): Promise<void> {
             }
         }
         if (files.length > 0) {
-            save(shell);
+            saveAndWarn();
             scrollToEnd();
         }
     });
 
     updatePrompt();
     print(motd + '\n');
+    // Saving once at startup reports unavailable storage right away instead of at the first command.
+    if (!keepSaved) {
+        saveAndWarn();
+    }
     input.focus();
 }
 
