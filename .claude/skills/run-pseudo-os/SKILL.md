@@ -26,6 +26,16 @@ Node 26 is what's installed here; the driver needs Node ≥ 22 (global
 falling back to `chromium-*`, `/usr/bin/chromium`, or `$CHROME`. No
 `chromium-cli`, no Playwright npm package needed.
 
+**Ports and scratch.** Port 3000, the server's default, is msfslogger's live
+server on this machine: always pass `PORT`. Use 3123 from the live checkout
+and 3124 from a run clone (`.claude/ENVIRONMENT.md` § Ports). Keep temporary
+files out of `/tmp`: `sh.mjs` and the driver use the OS temp dir, so export
+`TMPDIR` first, in the same command as the work:
+
+```bash
+mkdir -p .claude/scratch/tmp && export TMPDIR=$PWD/.claude/scratch/tmp
+```
+
 ## Run (agent path)
 
 ### Shell logic: `sh.mjs` (no server)
@@ -45,7 +55,7 @@ node .claude/skills/run-pseudo-os/sh.mjs --put test/fixtures/wasm/crash.wasm './
 
 ```bash
 npm run build
-PORT=3123 node build/server.js > /tmp/pseudo-os-server.log 2>&1 &
+PORT=3123 nohup node build/server.js > .claude/scratch/server-3123.log 2>&1 &
 timeout 15 bash -c 'until curl -sf localhost:3123 >/dev/null; do sleep 0.3; done'
 curl -s -X POST localhost:3123/execute -H 'Content-Type: application/json' \
      -d '{"command":"ls -l; hello; echo $?", "session":"agent"}' -D -
@@ -87,7 +97,8 @@ errors
 EOF
 ```
 
-Screenshots → `/tmp/pseudo-os-shots/<name>.png` (`--out DIR` to change).
+Screenshots → `$TMPDIR/pseudo-os-shots/<name>.png`, or `--out DIR` (a run
+puts them in `.claude/scratch/<run-id>/shots`).
 Open them with Read to check. `--profile DIR` keeps the Chromium profile
 (and IndexedDB state) between driver runs. Exit: 0 ok, 1 page threw or
 logged `console.error`, 2 driver failure (bad step, timeout, server down).
@@ -108,7 +119,8 @@ logged `console.error`, 2 driver failure (bad step, timeout, server down).
 ## Run (human path)
 
 ```bash
-npm start   # builds, serves http://localhost:3000 (PORT to override). Ctrl-C to stop.
+PORT=3123 npm start   # builds, serves http://localhost:3123. Ctrl-C to stop.
+                      # Without PORT it takes 3000 and fails with EADDRINUSE here.
 ```
 
 ## Test
@@ -139,6 +151,6 @@ npm run typecheck   # tsc --noEmit, clean
 ## Troubleshooting
 
 - **`[driver] cannot load http://localhost:3999: net::ERR_CONNECTION_REFUSED`**:
-  server not running on that port / wrong `--url` (default is `:3000`).
+  server not running on that port / wrong `--url` (default is `:3123`).
 - **`no Chromium found`**: `npx -y playwright install chromium-headless-shell`
   (untested here — the browser was already cached) or set `CHROME=`.

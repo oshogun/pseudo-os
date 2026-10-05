@@ -132,3 +132,10 @@ dist
 .pnp.*
 
 package-lock.json
+# Agentic workflow (see CLAUDE.md): run artifacts, run clones and scratch stay
+# local; only the runs README is tracked
+.claude/runs/*
+!.claude/runs/README.md
+.claude/run-clones/
+.claude/scratch/
+.claude/settings.local.json

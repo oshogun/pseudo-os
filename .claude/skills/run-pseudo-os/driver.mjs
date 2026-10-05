@@ -38,7 +38,7 @@ function option(name, fallback) {
     const i = args.indexOf(name);
     return i >= 0 ? args[i + 1] : fallback;
 }
-const url = option('--url', 'http://localhost:3000');
+const url = option('--url', 'http://localhost:3123');
 const outDir = resolve(option('--out', join(tmpdir(), 'pseudo-os-shots')));
 const keepProfile = option('--profile');
 
@@ -302,7 +302,11 @@ try {
     const appErrors = errors.filter(e => !e.startsWith('log: '));
     if (errors.length) console.error('[page errors]\n' + errors.join('\n'));
     ws.close();
+    // Wait for Chromium to exit before deleting its profile, or it writes the
+    // directory back while shutting down and the profile is left behind.
+    const exited = new Promise(r => chrome.once('exit', r));
     chrome.kill();
+    await Promise.race([exited, sleep(5000)]);
     if (!keepProfile) rmSync(profile, { recursive: true, force: true });
     process.exit(failed ? 2 : appErrors.length ? 1 : 0);
 }
