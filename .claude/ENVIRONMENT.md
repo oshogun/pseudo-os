@@ -149,7 +149,8 @@ Bash calls: begin every command with `cd $RUN_DIR/tree && …`. Run without it,
 tree it sits in.
 
 The gate is `npm run typecheck && npm test && npm run build` (there is no lint
-script and no CI). Beyond it:
+script; CI runs the same gate plus the `.wasm` rebuild check, see
+`.github/workflows/ci.yml`). Beyond it:
 
 - `npm test` runs Vitest over `test/*.test.ts` in the node environment. It is
   hermetic. The WASI tests run the committed `.wasm` fixtures in

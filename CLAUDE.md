@@ -217,9 +217,11 @@ diff.
 
 ## Verification
 
-The gate is `npm run typecheck && npm test && npm run build`. There is no lint
-script and no CI yet (no `.github/`), so the gate is run by hand, under the
-machine's default Node (v26).
+The gate is `npm run typecheck && npm test && npm run build`, under Node 26
+(there is no lint script). CI (`.github/workflows/ci.yml`) runs the same gate
+on pushes to `main` and on pull requests, plus a job that rebuilds every
+`.wasm` with wasi-sdk 34 and fails unless the committed files match their
+`.c` sources byte for byte.
 
 - `npm test` (Vitest, node environment) covers the parser, path helpers,
   filesystem, shell, commands, Tab completion and the WASI layer (running the

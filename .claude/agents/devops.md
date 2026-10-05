@@ -19,7 +19,7 @@ Prove the run is shippable, and make it ship: clean build from a clean
 checkout, tooling that works, docs that match the code.
 
 Your files: `package.json`, `tsconfig.json`, `vitest.config.ts`, `.gitignore`,
-`scripts/**`, `.github/**` (there is no CI yet) and
+`scripts/**`, `.github/**` (CI) and
 `.claude/skills/run-pseudo-os/**`, plus `README.md` when the envelope's
 `allowed_paths` include it.
 
@@ -43,8 +43,16 @@ Your files: `package.json`, `tsconfig.json`, `vitest.config.ts`, `.gitignore`,
 - **`scripts/build-wasm.sh`** needs wasi-sdk 34, installed at
   `/home/guilherme/opt/wasi-sdk` (`.claude/ENVIRONMENT.md`). Do not install
   another version: the committed `.wasm` files are its byte-exact output.
-- **CI**: none exists. Adding the first workflow is a decision for the user,
-  made in the intake, not something to add on your own.
+- **CI**: `.github/workflows/ci.yml` runs on pushes to `main` and on pull
+  requests. Job `check` runs the gate on Node 26 after `npm install`; job
+  `wasm` downloads wasi-sdk 34 (pinned sha256), fails on a `.wasm` with no
+  `.c`, rebuilds with `scripts/build-wasm.sh` and fails if
+  `git status --porcelain -- '*.wasm'` shows anything. Before changing it, run
+  every `run:` block you touch by hand in the clone under `bash -e` (GitHub's
+  default shell, no pipefail), with the job's `env:` set and `RUNNER_TEMP`
+  under the run's scratch directory; an unset `WASI_SDK_VERSION` makes the
+  download 404. A new job, a secret, a deploy or browser tests in CI are the
+  user's decision, made in the intake.
 - **Docs**: `README.md` matches what the code now does (the command table,
   shell features, WASI limitations, HTTP API). A stale sentence that
   contradicts shipped behaviour is a defect, and fixing it is in scope when the

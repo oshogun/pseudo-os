@@ -48,7 +48,7 @@ Planner Designer  Implementer            DevOps    Reviewer
 | --- | --- |
 | core | `src/ts/fs/**`, `src/ts/shell/**`, `src/ts/commands/**`, `src/ts/wasi/**`, `src/ts/command.ts`, `src/ts/commandconfig.ts`, `src/ts/commandregistry.ts`, `src/ts/system.ts`, `src/ts/programs.ts`, `src/ts/server.ts`, `src/ts/wasm.d.ts`, `src/ts/client/storage.ts` (it is the saved-state contract), `src/programs/**`, `test/**` |
 | ui | `src/ts/client/**` except `storage.ts`, `src/public/**` |
-| devops | `package.json`, `tsconfig.json`, `vitest.config.ts`, `.gitignore`, `scripts/**`, `.github/**` (none yet), `.claude/skills/run-pseudo-os/**` |
+| devops | `package.json`, `tsconfig.json`, `vitest.config.ts`, `.gitignore`, `scripts/**`, `.github/**`, `.claude/skills/run-pseudo-os/**` |
 
 Core and UI never share a task. The Planner (or the Orchestrator, for tier-2
 work) picks the matching agent: Jr by default, Sr when the task is a contract
