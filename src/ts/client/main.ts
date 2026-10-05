@@ -159,7 +159,7 @@ resetButton.addEventListener('click', () => {
     if (confirm('Erase every change you made and restore the original files?')) {
         input.value = '';
         run('reset --yes');
-        print(motd);
+        print(motd + '\n');
         input.focus();
     }
 });
