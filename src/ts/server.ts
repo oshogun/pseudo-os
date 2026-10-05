@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 
+import { programs } from './programs';
 import Shell from './shell/shell';
 import { createShell } from './system';
 
@@ -12,7 +13,7 @@ const sessions = new Map<string, Shell>();
 function getShell(session: string): Shell {
     let shell = sessions.get(session);
     if (!shell) {
-        shell = createShell();
+        shell = createShell(undefined, programs);
         sessions.set(session, shell);
     }
     return shell;

@@ -5,8 +5,8 @@
   "main": "build/server.js",
   "scripts": {
     "build": "npm run build:client && npm run build:server",
-    "build:client": "esbuild src/ts/client/main.ts --bundle --platform=browser --format=iife --target=es2020 --outfile=build/public/shell.js && cp src/public/* build/public/",
-    "build:server": "esbuild src/ts/server.ts --bundle --platform=node --packages=external --format=cjs --outfile=build/server.js",
+    "build:client": "esbuild src/ts/client/main.ts --bundle --loader:.wasm=binary --platform=browser --format=iife --target=es2020 --outfile=build/public/shell.js && cp src/public/* build/public/",
+    "build:server": "esbuild src/ts/server.ts --bundle --loader:.wasm=binary --platform=node --packages=external --format=cjs --outfile=build/server.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "start": "npm run build && node build/server.js"

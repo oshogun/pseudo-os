@@ -19,6 +19,10 @@ const readme = `Things to try:
   mkdir -p projects/demo && tree
   history | tail -n 3
   export NAME=world; echo "hello, $NAME"
+  hello                     (a real C program, compiled to WebAssembly)
+
+You can drop files onto the terminal to copy them here, including
+WebAssembly programs built with wasi-sdk: run them with ./name.
 
 Your files are saved in this browser, so they survive a page reload.
 `;
