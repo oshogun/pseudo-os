@@ -1,20 +1,40 @@
 import FileSystem, { FsError } from "./fs/filesystem";
 import type Shell from "./shell/shell";
 
+export interface Chunk {
+    text: string;
+    error: boolean;
+}
+
 // Collects text written by a command, in order.
 export class Output {
-    private chunks: string[] = [];
+    readonly chunks: Chunk[] = [];
+    private error: boolean;
+
+    constructor(chunks?: Chunk[], error = false) {
+        if (chunks) {
+            this.chunks = chunks;
+        }
+        this.error = error;
+    }
+
+    // A view that writes into the same buffer with text marked as errors.
+    errors(): Output {
+        return new Output(this.chunks, true);
+    }
 
     write(text: string): void {
-        this.chunks.push(text);
+        if (text !== '') {
+            this.chunks.push({ text, error: this.error });
+        }
     }
 
     writeln(text = ''): void {
-        this.chunks.push(text + '\n');
+        this.write(text + '\n');
     }
 
     toString(): string {
-        return this.chunks.join('');
+        return this.chunks.map(c => c.text).join('');
     }
 }
 

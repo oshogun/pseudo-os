@@ -132,4 +132,12 @@ describe('commands', () => {
         expect(run('which ls')).toBe('/bin/ls\n');
         expect(run('cat /bin/ls')).toBe('#!pseudo-os builtin: ls\n');
     });
+
+    it('reset restores the original files after confirmation', () => {
+        const { run, shell } = setup();
+        run('rm -r documents; cd /tmp; export X=1');
+        expect(shell.execute('reset').exitCode).toBe(1);
+        expect(shell.execute('reset --yes').clear).toBe(true);
+        expect(run('pwd; ls; echo "[$X]"')).toBe('/home/user\nREADME  documents/  notes.txt\n[]\n');
+    });
 });

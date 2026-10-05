@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>pseudo-os</title>
+    <meta name="description" content="A pretend operating system with a shell and filesystem, running in your browser.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wdth,wght@87.5,300..700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <main class="window" aria-label="pseudo-os terminal">
+        <header class="titlebar">
+            <span class="lights" aria-hidden="true"><i></i><i></i><i></i></span>
+            <h1 class="title" id="title">user@pseudo-os: ~</h1>
+            <button type="button" class="reset" id="reset" title="Erase your changes and restore the original files">Reset files</button>
+        </header>
+        <section class="screen" id="screen">
+            <div class="scrollback" id="scrollback" role="log" aria-live="polite"></div>
+            <form class="line" id="line" autocomplete="off">
+                <label class="prompt" for="input" id="prompt"></label>
+                <input id="input" class="input" type="text" spellcheck="false" autocapitalize="off" autocorrect="off" enterkeyhint="send">
+            </form>
+        </section>
+    </main>
+    <script src="shell.js"></script>
+</body>
+
+</html>

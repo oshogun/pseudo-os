@@ -57,12 +57,20 @@ const defaultEnv = { HOME, USER, HOSTNAME: 'pseudo-os', SHELL: '/bin/pseudo-sh',
 // Creates a shell, restoring saved state when given.
 export function createShell(saved?: SerializedShell): Shell {
     const registry = new CommandConfig().getCommands();
+    let shell: Shell;
     if (saved) {
-        const shell = new Shell(FileSystem.deserialize(saved.fs), registry, saved.env);
+        shell = new Shell(FileSystem.deserialize(saved.fs), registry, saved.env);
         shell.history.push(...saved.history);
-        return shell;
+    } else {
+        shell = new Shell(createDefaultFileSystem(registry.names()), registry, defaultEnv);
     }
-    return new Shell(createDefaultFileSystem(registry.names()), registry, defaultEnv);
+    shell.factoryReset = () => {
+        shell.fs = createDefaultFileSystem(registry.names());
+        shell.env = new Map(Object.entries(defaultEnv));
+        shell.env.set('PWD', shell.fs.cwd);
+        shell.history.length = 0;
+    };
+    return shell;
 }
 
 export { motd };

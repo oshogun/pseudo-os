@@ -16,6 +16,7 @@ import MkdirCommand from "./commands/mkdircommand";
 import MvCommand from "./commands/mvcommand";
 import PrintCommand from "./commands/printcommand";
 import PwdCommand from "./commands/pwdcommand";
+import ResetCommand from "./commands/resetcommand";
 import RmCommand from "./commands/rmcommand";
 import RmdirCommand from "./commands/rmdircommand";
 import SortCommand from "./commands/sortcommand";
@@ -52,6 +53,7 @@ class CommandConfig {
         this.registry.registerCommand('tee', new TeeCommand());
         this.registry.registerCommand('help', new HelpCommand());
         this.registry.registerCommand('clear', new ClearCommand());
+        this.registry.registerCommand('reset', new ResetCommand());
         this.registry.registerCommand('history', new HistoryCommand());
         this.registry.registerCommand('export', new ExportCommand());
         this.registry.registerCommand('unset', new UnsetCommand());

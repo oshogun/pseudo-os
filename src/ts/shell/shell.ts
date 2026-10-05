@@ -1,4 +1,4 @@
-import { CommandContext, Output } from "../command";
+import { Chunk, CommandContext, Output } from "../command";
 import CommandRegistry from "../commandregistry";
 import FileSystem, { FsError, SerializedFileSystem } from "../fs/filesystem";
 import { expandWord } from "./expand";
@@ -8,6 +8,8 @@ import { ListItem, ParseError, parse, SimpleCommand, Word } from "./parser";
 export interface ExecResult {
     // Everything written to the terminal (stdout and stderr, interleaved).
     output: string;
+    // The same text, split into pieces tagged as normal output or errors.
+    chunks: Chunk[];
     exitCode: number;
     // Set when a command such as `clear` asked the terminal to wipe the screen.
     clear: boolean;
@@ -55,6 +57,10 @@ class Shell {
         return `${this.env.get('USER') ?? 'user'}@${this.env.get('HOSTNAME') ?? 'pseudo-os'}:${this.displayCwd}$ `;
     }
 
+    // Puts the filesystem, environment and history back to how a fresh shell
+    // starts. Set by whoever creates the shell (see system.ts).
+    factoryReset: (() => void) | null = null;
+
     requestClear(): void {
         this.clearRequested = true;
     }
@@ -92,7 +98,7 @@ class Shell {
                 if (!(error instanceof ParseError)) {
                     throw error;
                 }
-                terminal.writeln(`pseudo-sh: ${error.message}`);
+                terminal.errors().writeln(`pseudo-sh: ${error.message}`);
                 this.lastExitCode = 2;
             }
             for (const item of list) {
@@ -106,7 +112,7 @@ class Shell {
             }
         }
 
-        return { output: terminal.toString(), exitCode: this.lastExitCode, clear: this.clearRequested };
+        return { output: terminal.toString(), chunks: terminal.chunks, exitCode: this.lastExitCode, clear: this.clearRequested };
     }
 
     private expand(word: Word): string[] {
@@ -136,7 +142,7 @@ class Shell {
         for (const redirect of command.redirects) {
             const targets = this.expand(redirect.target);
             if (targets.length !== 1) {
-                terminal.writeln(`pseudo-sh: ${redirect.target.map(p => p.text).join('')}: ambiguous redirect`);
+                terminal.errors().writeln(`pseudo-sh: ${redirect.target.map(p => p.text).join('')}: ambiguous redirect`);
                 return 1;
             }
             const path = targets[0];
@@ -156,7 +162,7 @@ class Shell {
                 }
             } catch (error) {
                 if (error instanceof FsError) {
-                    terminal.writeln(`pseudo-sh: ${error.message}`);
+                    terminal.errors().writeln(`pseudo-sh: ${error.message}`);
                     return 1;
                 }
                 throw error;
@@ -165,7 +171,7 @@ class Shell {
 
         let exitCode = 0;
         const out = redirectOut ? new Output() : stdout;
-        const stderr = redirectErr ? new Output() : terminal;
+        const stderr = redirectErr ? new Output() : terminal.errors();
         if (argv.length > 0) {
             exitCode = this.invoke(argv, stdin, out, stderr, interactive && !redirectOut);
         }
@@ -177,7 +183,7 @@ class Shell {
                 if (!(error instanceof FsError)) {
                     throw error;
                 }
-                terminal.writeln(`pseudo-sh: ${error.message}`);
+                terminal.errors().writeln(`pseudo-sh: ${error.message}`);
                 exitCode = 1;
             }
         };
