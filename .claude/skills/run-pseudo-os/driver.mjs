@@ -78,6 +78,12 @@ const chrome = spawn(findChrome(), [
     'about:blank',
 ], { stdio: ['ignore', 'ignore', 'pipe'] });
 
+// Never leave Chromium running: kill it however this process ends, and keep
+// going when stdout is closed early (`driver.mjs ... | head`), so the cleanup
+// below still runs.
+process.on('exit', () => chrome.kill());
+process.stdout.on('error', () => {});
+
 let chromeLog = '';
 const wsUrl = await new Promise((resolveWs, reject) => {
     const timer = setTimeout(() => reject(new Error('Chromium did not start:\n' + chromeLog)), 15000);

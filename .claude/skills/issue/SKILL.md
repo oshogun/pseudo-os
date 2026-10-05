@@ -87,8 +87,8 @@ Using `CLAUDE.md` § When the workflow applies and `.claude/agents.md`
 - **Tier 2**: one seam, no new contract. Name the implementer role (`core_jr`
   or `ui_jr`, or `devops` for CI and tooling) and its `allowed_paths`.
 - **Tier 3**: several files, a contract change (saved state, the `/execute`
-  API, the WASI interface, documented command behaviour, a new `/bin`
-  program), or something the user sees. Note whether it needs Design and
+  API, the WASI interface, a change to documented shell or command
+  behaviour, a new `/bin` program), or something the user sees. Note whether it needs Design and
   which domains (`core_*`, `ui_*`, `devops`) it touches.
 - **Blocked on this machine**: the work needs new or changed `.wasm` programs
   and wasi-sdk is not installed (`.claude/ENVIRONMENT.md`). Say so; installing

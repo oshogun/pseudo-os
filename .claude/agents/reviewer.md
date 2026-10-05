@@ -45,13 +45,30 @@ independently and which ones you could not, with the reason.
    failure mode this workflow exists to prevent. Three items always apply:
    - **State saved by `main` still loads.** For any diff that touches
      `src/ts/fs/**`, `src/ts/shell/shell.ts`, `src/ts/system.ts` or
-     `src/ts/client/**`: build `main` (the live checkout's `build/`, or a
-     second build of the clone's merge base into scratch), save some state
-     with it in the driver using `--profile .claude/scratch/<run-id>/profile`
-     (create a file, a directory, a binary file by `drop`, an `export`), then
-     serve the clone's build on the same port and load the same profile; the
-     files, environment and history must be there. `boot()` starting fresh
-     instead is a blocking finding, because it deletes users' files.
+     `src/ts/client/**`, save state with `main`'s build and load it with the
+     clone's. The Orchestrator copied `main`'s build to
+     `.claude/scratch/<run-id>/build-main` when it made the clone. From
+     `$RUN_DIR/tree`, with `TMPDIR` set (run 2026-10-05):
+
+         S=/home/guilherme/pseudo-os/.claude/scratch/<run-id>
+         D=.claude/skills/run-pseudo-os/driver.mjs
+         npm run build
+         PORT=3124 nohup node $S/build-main/server.js > $S/main.log 2>&1 &
+         timeout 15 bash -c 'until curl -sf localhost:3124 >/dev/null; do sleep 0.3; done'
+         printf 'run mkdir p && echo kept > p/f && export K=v\ndrop test/fixtures/wasm/wcat.wasm\n' \
+           | node $D --url http://localhost:3124 --profile $S/profile
+         lsof -ti:3124 -sTCP:LISTEN | xargs -r kill
+         PORT=3124 nohup node build/server.js > $S/clone.log 2>&1 &
+         timeout 15 bash -c 'until curl -sf localhost:3124 >/dev/null; do sleep 0.3; done'
+         printf 'run cat p/f; echo $K; ls; history 3\n' \
+           | node $D --url http://localhost:3124 --profile $S/profile
+         lsof -ti:3124 -sTCP:LISTEN | xargs -r kill
+
+     The second run must print `kept`, `v` and list `p/` and `wcat.wasm`
+     (IndexedDB is per origin, so both servers use the same port). Add state
+     that exercises what the diff changed. `boot()` starting fresh instead is
+     a blocking finding, because it deletes users' files. Delete
+     `$S/profile` afterwards.
    - **The committed programs still run**: `npm test` (the WASI suite runs
      `test/fixtures/wasm/`) and `sh.mjs 'hello'` prints `Hello, world!`.
    - **The gate passes**: `npm run typecheck && npm test && npm run build`.

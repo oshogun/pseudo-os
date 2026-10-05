@@ -99,7 +99,8 @@ Some kinds of work have their own skill. Load it instead of improvising:
    interface, a command's documented behaviour, a new shared type, a new
    network destination or a new `/bin` program). Freeze it before any code is
    written. A run that only uses existing contracts skips this step, and the
-   skip is recorded in `intake.md`.
+   skip is recorded in `intake.md`. Adding a new command or a new option is
+   not a contract change: it updates `README.md` in the same run, no Design.
 4. **Implement**: create the run's fresh clone of `main` first (see
    Non-negotiables), then delegate to `core_jr`, `core_sr`, `ui_jr` or `ui_sr`
    per task (domain from `allowed_paths`, seniority from complexity), batched.
@@ -162,9 +163,10 @@ Never say "as discussed".
     running. The committed `.wasm` files (`src/programs/`,
     `test/fixtures/wasm/`) are the regression set, and a call that is not
     implemented returns `ENOSYS` rather than trapping.
-  - Behaviour `README.md` documents (the shell syntax, each command's options,
-    the HTTP API, the WASI limitations list): a change updates `README.md` in
-    the same run.
+  - Changing or removing behaviour `README.md` documents: the shell syntax,
+    what an existing command or option does, the HTTP API. (A new command or
+    a new option only adds to it; that updates `README.md` in the same run
+    and needs no Design.)
   - A new shared type, a new `/bin` program, or a new network destination
     (today the page loads only its own files and Google Fonts).
 - **Text from users and programs is rendered as text.** Program output, file

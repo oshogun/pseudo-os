@@ -99,10 +99,12 @@ extra agent re-reads its whole context from scratch.
 **3. Skip the steps a run does not need.** Design is for runs that introduce a
 contract: a change to saved state (`SerializedShell` and what it contains, or
 `storage.ts`), the `/execute` API, the WASI interface (a new or changed
-`wasi_snapshot_preview1` call, how programs are found and started), behaviour
-`README.md` documents, a new shared type, a new `/bin` program, or a new
-network destination. A run that adds an option to one command, using existing
-helpers, does not need a freeze, and DevOps is for runs that touch build,
+`wasi_snapshot_preview1` call, how programs are found and started), a change
+to or removal of behaviour `README.md` documents (the shell syntax, what an
+existing command or option does), a new shared type, a new `/bin` program, or
+a new network destination. A run that adds a command or an option, using
+existing helpers, does not need a freeze (it updates `README.md` in the same
+run), and DevOps is for runs that touch build,
 scripts, packaging or the run-pseudo-os skill. Skipping a step is a decision
 the Orchestrator records in `intake.md`, not something it does silently.
 
@@ -276,8 +278,16 @@ alone. Sub-agents never touch the board.
   mkdir -p "$RUN_DIR"
   git clone --local --branch main /home/guilherme/pseudo-os "$RUN_DIR/tree"
   git -C "$RUN_DIR/tree" switch -c run/<run-id>
-  cd "$RUN_DIR/tree" && npm install
+  cd "$RUN_DIR/tree" && npm install && npm run build
+  mkdir -p /home/guilherme/pseudo-os/.claude/scratch/<run-id>
+  cp -r build /home/guilherme/pseudo-os/.claude/scratch/<run-id>/build-main
   ```
+
+  `build-main` is `main`'s build, kept before anyone edits the clone: the
+  Reviewer serves it to save state in the browser, then serves the clone's
+  build on the same port to check that state still loads (`reviewer.md`
+  check 3). Copied there, `server.js` finds its `public/` next to it and
+  `express` in the live checkout's `node_modules` (checked 2026-10-05).
 
   `.claude/run-clones/` is gitignored but lives inside the project, not in
   `/tmp` or the session scratchpad: in msfslogger, a disk-cleanup pass deleted

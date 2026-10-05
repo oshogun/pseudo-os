@@ -134,6 +134,12 @@ closing an issue is public and needs the user's go.
 
 ## Verification
 
+Your shell starts in the live checkout, and `cd` does not carry over between
+Bash calls: begin every command with `cd $RUN_DIR/tree && …`. Run without it,
+`npm test` passes against the unchanged live code, and the live copy of
+`sh.mjs` bundles the live `src/`, not the clone's: `sh.mjs` always tests the
+tree it sits in.
+
 The gate is `npm run typecheck && npm test && npm run build` (there is no lint
 script and no CI). Beyond it:
 
