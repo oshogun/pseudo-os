@@ -1,6 +1,9 @@
 import { Chunk, CommandContext, Output } from "../command";
 import CommandRegistry from "../commandregistry";
+import Directory from "../fs/directory";
+import File from "../fs/file";
 import FileSystem, { FsError, SerializedFileSystem } from "../fs/filesystem";
+import Wasi from "../wasi/wasi";
 import { expandWord } from "./expand";
 import { UsageError } from "./options";
 import { ListItem, ParseError, parse, SimpleCommand, Word } from "./parser";
@@ -22,6 +25,11 @@ export interface SerializedShell {
 }
 
 const MAX_HISTORY = 500;
+
+const WASM_MAGIC = [0x00, 0x61, 0x73, 0x6d];
+
+// Compiled modules, reused while the file is unchanged.
+const moduleCache = new WeakMap<File, { modified: number; module: WebAssembly.Module }>();
 
 class Shell {
     fs: FileSystem;
@@ -208,10 +216,14 @@ class Shell {
 
     private invoke(argv: string[], stdin: string, stdout: Output, stderr: Output, interactive: boolean): number {
         const [name, ...args] = argv;
-        const command = this.registry.getCommand(name);
+        const command = name.includes('/') ? undefined : this.registry.getCommand(name);
         if (!command) {
-            stderr.writeln(`${name}: command not found`);
-            return 127;
+            const program = this.findProgram(name);
+            if (!program) {
+                stderr.writeln(name.includes('/') ? `pseudo-sh: ${name}: No such file or directory` : `${name}: command not found`);
+                return 127;
+            }
+            return this.exec(name, program, args, stdin, stdout, stderr);
         }
         if (args[0] === '--help' && name !== 'echo') {
             stdout.writeln(`usage: ${name} ${command.usage}`.trimEnd());
@@ -232,6 +244,82 @@ class Shell {
                 return 2;
             }
             throw error;
+        }
+    }
+
+    // Builtins plus programs found in $PATH, sorted and without duplicates.
+    commandNames(): string[] {
+        const names = new Set(this.registry.names());
+        for (const dir of this.variable('PATH').split(':').filter(d => d !== '')) {
+            const node = this.fs.find(dir);
+            if (node instanceof Directory) {
+                node.list().filter(name => !(node.getFile(name) instanceof Directory)).forEach(name => names.add(name));
+            }
+        }
+        return [...names].sort();
+    }
+
+    // Finds the file a command name refers to: a path if it contains '/',
+    // otherwise the first match in $PATH.
+    findProgram(name: string): File | undefined {
+        if (name.includes('/')) {
+            return this.fs.find(name);
+        }
+        for (const dir of this.variable('PATH').split(':').filter(d => d !== '')) {
+            const node = this.fs.find(`${dir}/${name}`);
+            if (node && !(node instanceof Directory)) {
+                return node;
+            }
+        }
+        return undefined;
+    }
+
+    // Runs a program file. Only WebAssembly (WASI) programs can be executed.
+    private exec(name: string, program: File, args: string[], stdin: string, stdout: Output, stderr: Output): number {
+        if (program instanceof Directory) {
+            stderr.writeln(`pseudo-sh: ${name}: Is a directory`);
+            return 126;
+        }
+        const bytes = program.bytes;
+        if (bytes.length < 4 || WASM_MAGIC.some((b, i) => bytes[i] !== b)) {
+            stderr.writeln(`pseudo-sh: ${name}: cannot execute: Exec format error`);
+            return 126;
+        }
+
+        const decode = (decoder: TextDecoder, out: Output) => (chunk: Uint8Array) => out.write(decoder.decode(chunk, { stream: true }));
+        const outDecoder = new TextDecoder();
+        const errDecoder = new TextDecoder();
+        const wasi = new Wasi({
+            fs: this.fs,
+            args: [name, ...args],
+            env: Object.fromEntries(this.env),
+            stdin: new TextEncoder().encode(stdin),
+            stdout: decode(outDecoder, stdout),
+            stderr: decode(errDecoder, stderr),
+        });
+
+        try {
+            let cached = moduleCache.get(program);
+            if (!cached || cached.modified !== program.modified) {
+                cached = { modified: program.modified, module: new WebAssembly.Module(bytes) };
+                moduleCache.set(program, cached);
+            }
+            return wasi.run(cached.module);
+        } catch (error) {
+            if (error instanceof WebAssembly.CompileError || error instanceof WebAssembly.LinkError) {
+                stderr.writeln(`pseudo-sh: ${name}: cannot execute: ${error.message}`);
+                return 126;
+            }
+            if (error instanceof WebAssembly.RuntimeError) {
+                stderr.writeln(`${name}: crashed: ${error.message}`);
+                return 134;
+            }
+            // Anything else is a bug in pseudo-os (e.g. in the WASI layer), not in the program.
+            stderr.writeln(`pseudo-sh: ${name}: internal error: ${error instanceof Error ? error.message : String(error)}`);
+            return 70;
+        } finally {
+            stdout.write(outDecoder.decode());
+            stderr.write(errDecoder.decode());
         }
     }
 

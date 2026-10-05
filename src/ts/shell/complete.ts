@@ -36,7 +36,7 @@ export function complete(shell: Shell, line: string, cursor: number): Completion
 
     if (isCommand && !word.includes('/')) {
         prefix = '';
-        candidates = shell.registry.names().filter(name => name.startsWith(word)).map(name => name + ' ');
+        candidates = shell.commandNames().filter(name => name.startsWith(word)).map(name => name + ' ');
         display = c => c.trim();
     } else {
         const slash = word.lastIndexOf('/');

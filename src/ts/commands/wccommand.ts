@@ -2,7 +2,7 @@ import Command, { CommandContext } from "../command";
 import { parseOptions } from "../shell/options";
 
 class WcCommand extends Command {
-    description = 'count lines, words and characters';
+    description = 'count lines, words and bytes';
     usage = '[-l] [-w] [-c] [file...]';
 
     run = (ctx: CommandContext): number => {
@@ -15,7 +15,7 @@ class WcCommand extends Command {
             const counts = [
                 (text.match(/\n/g) ?? []).length,
                 text.split(/\s+/).filter(w => w !== '').length,
-                text.length,
+                new TextEncoder().encode(text).length,
             ];
             counts.forEach((n, i) => totals[i] += n);
             rows.push([counts, file === '-' ? '' : file]);
