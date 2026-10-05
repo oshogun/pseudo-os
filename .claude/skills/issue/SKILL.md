@@ -62,7 +62,8 @@ check each factual claim:
   confirm a claim the code already settles.
 - **Claims about programs or toolchains** ("uutils builds for wasip1", "xcc
   needs only these calls"): check the upstream project (WebFetch) and say
-  whether it can be checked here at all; there is no wasi-sdk on this machine.
+  whether it can be checked here: wasi-sdk 34 is at `~/opt/wasi-sdk`, so C
+  compiles to `wasm32-wasip1` locally (`.claude/ENVIRONMENT.md`).
 - **Dependency or version issues**: check `package.json`, `npm ls <pkg>`, and
   the upstream changelog (WebFetch) for what the bump actually changes.
 - **Documented behaviour**: if the issue touches something `README.md`
@@ -90,9 +91,6 @@ Using `CLAUDE.md` § When the workflow applies and `.claude/agents.md`
   API, the WASI interface, a change to documented shell or command
   behaviour, a new `/bin` program), or something the user sees. Note whether it needs Design and
   which domains (`core_*`, `ui_*`, `devops`) it touches.
-- **Blocked on this machine**: the work needs new or changed `.wasm` programs
-  and wasi-sdk is not installed (`.claude/ENVIRONMENT.md`). Say so; installing
-  it is the user's call.
 
 ## 5. Report
 

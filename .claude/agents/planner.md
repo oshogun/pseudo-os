@@ -91,11 +91,11 @@ planning, establish for yourself:
   new interactive mode in the terminal, Web Worker plumbing, or logic spanning
   several modules in that domain. A task's `allowed_paths` sit entirely in one
   domain, since core and UI never share an agent.
-- **A `.c` change is not plannable on this machine.** wasi-sdk is not
-  installed (`.claude/ENVIRONMENT.md`), so no task may change
-  `src/programs/*.c` or `test/fixtures/wasm/*.c` expecting the `.wasm` to
-  follow. If the goal needs a new or changed program, return `blocked` and say
-  so.
+- **A `.c` change and its `.wasm` are one task.** The task that changes
+  `src/programs/*.c` or `test/fixtures/wasm/*.c` owns the matching `.wasm` and
+  rebuilds it with `scripts/build-wasm.sh` and wasi-sdk 34
+  (`.claude/ENVIRONMENT.md`); its criteria include that `git status` lists no
+  other `.wasm`. A new program in `/bin` is a contract (Design first).
 - **Every phase ends in a reviewer task**, and the first task of phase N depends
   on the reviewer task of phase N−1. That gate is what stops tasks with
   overlapping paths in different phases from ever running concurrently.

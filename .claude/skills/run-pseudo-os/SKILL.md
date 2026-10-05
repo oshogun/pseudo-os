@@ -145,8 +145,9 @@ npm run typecheck   # tsc --noEmit, clean
   as `log:` lines and don't change the exit code.
 - **Programs run synchronously on the page's main thread.** A looping `.wasm`
   freezes the page; the driver's next step will hang with it.
-- **Rebuilding `.wasm` fixtures** needs wasi-sdk (`WASI_SDK=… scripts/build-wasm.sh`);
-  not installed here, untested. The committed `.wasm` files work as-is.
+- **Rebuilding `.wasm` programs**: `WASI_SDK=$HOME/opt/wasi-sdk scripts/build-wasm.sh`
+  (wasi-sdk 34, installed here). It rewrites all of them; the output is
+  byte-identical for unchanged sources, so `git status` shows only real changes.
 
 ## Troubleshooting
 

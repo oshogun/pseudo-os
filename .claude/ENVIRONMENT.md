@@ -40,15 +40,23 @@ passes under (2026-10-05). The repo pins no version (no `.nvmrc`, no
 and prints `allow-scripts` warnings for esbuild's postinstall; the build works
 without it, so approve nothing.
 
-## WebAssembly programs: wasi-sdk is not installed
+## WebAssembly programs: wasi-sdk 34 is at `~/opt/wasi-sdk`
 
-`scripts/build-wasm.sh` rebuilds `src/programs/*.wasm` and
-`test/fixtures/wasm/*.wasm` from their `.c` sources and needs wasi-sdk
-(`WASI_SDK=/path/to/wasi-sdk`). There is no wasi-sdk, `clang` or `wasm-ld` on
-this machine (checked 2026-10-05). The committed `.wasm` files are what the
-tests and `/bin/hello` use. A task that edits a `.c` file cannot produce the
-matching `.wasm`: return `blocked` and say so rather than committing a `.c`
-change whose binary is stale. Installing wasi-sdk is the user's decision.
+`scripts/build-wasm.sh` rebuilds every `src/programs/*.wasm` and
+`test/fixtures/wasm/*.wasm` from its `.c` source. wasi-sdk 34.0 is installed
+at `/home/guilherme/opt/wasi-sdk` (a symlink to
+`~/opt/wasi-sdk-34.0-x86_64-linux`, 635 MB, clang 23.1.0, installed
+2026-10-05); it is on no `PATH`, so pass it explicitly, in the run clone:
+
+    WASI_SDK=/home/guilherme/opt/wasi-sdk scripts/build-wasm.sh
+
+The script rebuilds all of them, not only the one you changed. The build is
+byte-for-byte reproducible: on 2026-10-05 it rebuilt all five committed files
+identically, so after it runs `git status --short -- '*.wasm'` lists exactly
+the programs whose source changed. A `.wasm` that changed without its `.c`
+means something else changed (the SDK version, the flags) and is a finding.
+A `.c` change is committed together with its rebuilt `.wasm`. Do not install
+another wasi-sdk version: a different compiler gives different bytes.
 
 ## Ports
 

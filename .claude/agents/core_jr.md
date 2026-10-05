@@ -59,8 +59,11 @@ prove it works.
   yours to change: a shape that older saved state does not fit makes the page
   start a fresh system and drop every user's files. If the task would change
   one, return `blocked`: that is Core Sr's work.
-- **`.c` sources stay as they are.** wasi-sdk is not installed, so a `.c` edit
-  cannot be compiled to its `.wasm`. If the task needs one, return `blocked`.
+- **A `.c` edit ships its `.wasm`.** Rebuild with
+  `WASI_SDK=/home/guilherme/opt/wasi-sdk scripts/build-wasm.sh` in the clone
+  and keep the `.c` and its `.wasm` together. The build is reproducible, so
+  `git status --short -- '*.wasm'` must list only the programs whose source
+  you changed; anything else is a finding to report, not to commit.
 - **Scratch, ports and disk** follow `.claude/ENVIRONMENT.md` § Scratch space
   and § Ports: nothing in `/tmp`, `TMPDIR` redirected, `df -h /` before
   installing, the run-clone port (3124 or the one in your envelope), scratch

@@ -25,7 +25,7 @@ return the response envelope to you, and you validate, merge, and decide the
 next step.
 
 Standing environment facts every agent needs (ports, the disk and scratch
-rules, what is not installed) are in
+rules, wasi-sdk) are in
 **[.claude/ENVIRONMENT.md](.claude/ENVIRONMENT.md)**. Read it before running
 anything.
 
@@ -160,7 +160,8 @@ Never say "as discussed".
     with the exit code in `X-Exit-Code`, `{ output, exitCode, cwd, prompt }`
     when the client accepts JSON, one shell per `session`.
   - The WASI interface: programs built for `wasm32-wasip1` with wasi-sdk keep
-    running. The committed `.wasm` files (`src/programs/`,
+    running, and each `.wasm` is the build of its `.c` with wasi-sdk 34
+    (`scripts/build-wasm.sh`, `.claude/ENVIRONMENT.md`). The committed `.wasm` files (`src/programs/`,
     `test/fixtures/wasm/`) are the regression set, and a call that is not
     implemented returns `ENOSYS` rather than trapping.
   - Changing or removing behaviour `README.md` documents: the shell syntax,
@@ -177,8 +178,7 @@ Never say "as discussed".
   Reviewer re-runs the evidence rather than trusting a report.
 - **Escalate rather than guess** on: ambiguous requirements, destructive
   operations, credentials, a change that would drop users' saved files, a
-  change to a `.c` file (its `.wasm` cannot be rebuilt on this machine, see
-  `.claude/ENVIRONMENT.md`), or 3 failed review rounds.
+  or 3 failed review rounds.
 - **Commits are yours alone.** Sub-agents do not commit, push, or switch
   branches.
 

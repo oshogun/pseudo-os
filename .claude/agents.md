@@ -332,7 +332,7 @@ alone. Sub-agents never touch the board.
 - No agent may skip Review; Orchestrator never merges unreviewed work.
 - Any agent may return `blocked` with a concrete question instead of guessing.
 - Orchestrator escalates to the user on: ambiguous requirements, destructive
-  operations, credentials/secrets, a change that drops users' saved files, a
-  `.c` change whose `.wasm` cannot be rebuilt here, or 3 failed review rounds.
+  operations, credentials/secrets, a change that drops users' saved files, or
+  3 failed review rounds.
 - Keep every hand-off self-contained: context is passed explicitly, never
   assumed, and passed as slices, never as whole documents.

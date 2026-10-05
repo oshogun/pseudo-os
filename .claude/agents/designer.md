@@ -86,9 +86,10 @@ errno is the expensive kind of wrong.
   it rests on a browser API (Web Workers, `SharedArrayBuffer`, `Atomics.wait`,
   IndexedDB limits), try it in the run-pseudo-os driver's headless Chromium
   and record what happened. Prototypes live in
-  `.claude/runs/<run-id>/prototypes/`, never in `src/`. You cannot compile C
-  here (no wasi-sdk); if the design needs a new program, say so as a risk and
-  an open question rather than assuming one will exist.
+  `.claude/runs/<run-id>/prototypes/`, never in `src/`. C programs compile
+  here with wasi-sdk 34 (`.claude/ENVIRONMENT.md`), so a prototype program
+  can be built and run under the current layer before the design rests on
+  it.
 - **Assign type ownership explicitly.** Say which file each shared type lives in,
   so parallel tasks do not collide in the same file.
 - **Number every section, and keep the numbers stable.** `.claude/tools/ctx.sh

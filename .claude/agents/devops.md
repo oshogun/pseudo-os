@@ -40,8 +40,9 @@ Your files: `package.json`, `tsconfig.json`, `vitest.config.ts`, `.gitignore`,
 - **The run-pseudo-os skill**: when the app's behaviour changes, `sh.mjs`,
   `driver.mjs` and `SKILL.md` must still work; re-run the code blocks you
   changed, verbatim, on the run-clone port.
-- **`scripts/build-wasm.sh`** needs wasi-sdk, which is not installed. Do not
-  install it; a task that needs it is `blocked`.
+- **`scripts/build-wasm.sh`** needs wasi-sdk 34, installed at
+  `/home/guilherme/opt/wasi-sdk` (`.claude/ENVIRONMENT.md`). Do not install
+  another version: the committed `.wasm` files are its byte-exact output.
 - **CI**: none exists. Adding the first workflow is a decision for the user,
   made in the intake, not something to add on your own.
 - **Docs**: `README.md` matches what the code now does (the command table,
