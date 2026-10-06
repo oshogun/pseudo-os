@@ -22,7 +22,7 @@ projects
 ## Running it
 
 ```sh
-npm install
+npm ci
 npm start          # builds, then serves http://localhost:3000 (PORT to override)
 ```
 

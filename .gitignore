@@ -131,7 +131,6 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-package-lock.json
 # Agentic workflow (see CLAUDE.md): run artifacts, run clones and scratch stay
 # local; only the runs README is tracked
 .claude/runs/*

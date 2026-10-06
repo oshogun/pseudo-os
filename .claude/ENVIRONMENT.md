@@ -9,15 +9,18 @@ command below was run on this machine before it was written down.
 Implementers, DevOps and Reviewer work in `$RUN_DIR/tree`, a `git clone --local
 --branch main` of this repo that the Orchestrator makes under
 `.claude/run-clones/<run-id>/` (policy: `.claude/agents.md` § Rules). The
-envelope gives the absolute path. Do not edit, build, test, `npm install` or
-run `git` write commands in `/home/guilherme/pseudo-os`; reading it is fine.
+envelope gives the absolute path. Do not edit, build, test, `npm ci`,
+`npm install` or run `git` write commands in `/home/guilherme/pseudo-os`;
+reading it is fine.
 
-The clone has none of the live checkout's untracked files: no `node_modules`,
-no `build/`, and no `package-lock.json` (it is gitignored here). Install with
-`npm install` (`npm ci` fails with `EUSAGE`, checked 2026-10-05; about 90 MB).
-Do it first: the clone sits inside the live checkout, so before it has its own
-`node_modules`, Node and `npx` find the live checkout's packages two levels up
-and commands seem to work against dependencies the clone never declared.
+The clone has none of the live checkout's untracked files: no `node_modules`
+and no `build/`. `package-lock.json` is committed, so install with `npm ci`
+(about 90 MB), which installs exactly the versions in the lockfile and fails if
+`package.json` and the lockfile disagree. Use `npm install` only when a task
+adds or bumps a dependency, and commit the lockfile it rewrites. Do it
+first: the clone sits inside the live checkout, so before it has its own
+`node_modules`, Node and `npx` find the live checkout's packages two levels
+up and commands seem to work against dependencies the clone never declared.
 
 ## What runs
 
@@ -99,7 +102,7 @@ every agent:
   under `/tmp`), even when a tool or system prompt suggests it. Scratch goes in
   `.claude/scratch/<run-id>/` (gitignored), next to the run clone in
   `.claude/run-clones/<run-id>/`.
-- **Check the budget first.** Before any `git clone` or `npm install`, run
+- **Check the budget first.** Before any `git clone` or `npm ci`, run
   `df -h /`. With less than **8 GB** available, stop and return `blocked` with
   the `df` output. Do not free space by deleting anything you did not create.
 - **One install per run.** The run clone is the only `node_modules` a run
