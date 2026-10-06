@@ -278,7 +278,7 @@ alone. Sub-agents never touch the board.
   mkdir -p "$RUN_DIR"
   git clone --local --branch main /home/guilherme/pseudo-os "$RUN_DIR/tree"
   git -C "$RUN_DIR/tree" switch -c run/<run-id>
-  cd "$RUN_DIR/tree" && npm install && npm run build
+  cd "$RUN_DIR/tree" && npm ci && npm run build
   mkdir -p /home/guilherme/pseudo-os/.claude/scratch/<run-id>
   cp -r build /home/guilherme/pseudo-os/.claude/scratch/<run-id>/build-main
   ```
@@ -299,9 +299,8 @@ alone. Sub-agents never touch the board.
     them.
   - The clone is of **committed `main`**. Uncommitted or untracked files in the
     live checkout (`.claude/runs/**`, `node_modules`, `build/`) are
-    deliberately absent. `package-lock.json` is gitignored in this repo, so the
-    clone installs with `npm install`, not `npm ci` (`npm ci` fails with
-    `EUSAGE`). Run it before anything else: until the clone has its own
+    deliberately absent. The clone installs with `npm ci`, from the committed
+    `package-lock.json`. Run it before anything else: until the clone has its own
     `node_modules`, Node resolves packages from the live checkout's
     `node_modules` two directories up, and commands appear to work against
     the wrong dependencies.

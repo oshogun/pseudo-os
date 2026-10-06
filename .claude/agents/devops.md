@@ -25,14 +25,16 @@ Your files: `package.json`, `tsconfig.json`, `vitest.config.ts`, `.gitignore`,
 
 ## Typical scope
 
-- **Clean build from a clean checkout**: in the run clone, `npm install` then
+- **Clean build from a clean checkout**: in the run clone, `npm ci` then
   the gate (`npm run typecheck && npm test && npm run build`), exit 0. Re-run
   it at the end, after any late edits.
 - **Dependencies**: a new or bumped package states why, its install size, and
   that `npm install` and the build still pass with npm 11's install-script
   blocking (see `.claude/ENVIRONMENT.md` § Node and npm). A new runtime
   dependency needs the envelope's explicit permission. `package-lock.json` is
-  gitignored in this repo; tracking it is the user's decision, not yours.
+  committed: a change to `package.json` dependencies ships with the lockfile
+  `npm install` rewrites, and `npm ci` from a clean `node_modules` must then
+  pass, since CI's `check` job fails when the two disagree.
 - **The esbuild scripts in `package.json`** bundle `src/ts/client/main.ts` and
   `src/ts/server.ts`, with `.wasm` files loaded as binary. A new entry point
   (a Web Worker, say) is a new bundle there, and must be a `.ts` source: the
@@ -44,9 +46,10 @@ Your files: `package.json`, `tsconfig.json`, `vitest.config.ts`, `.gitignore`,
   `/home/guilherme/opt/wasi-sdk` (`.claude/ENVIRONMENT.md`). Do not install
   another version: the committed `.wasm` files are its byte-exact output.
 - **CI**: `.github/workflows/ci.yml` runs on pushes to `main` and on pull
-  requests. Job `check` runs the gate on Node 26 after `npm install`; job
-  `wasm` downloads wasi-sdk 34 (pinned sha256), fails on a `.wasm` with no
-  `.c`, rebuilds with `scripts/build-wasm.sh` and fails if
+  requests. Job `check` runs the gate on Node 26 after `npm ci`, with
+  `actions/setup-node`'s npm cache; job `wasm` downloads wasi-sdk 34 (pinned
+  sha256), fails on a `.wasm` with no `.c`, rebuilds with
+  `scripts/build-wasm.sh` and fails if
   `git status --porcelain -- '*.wasm'` shows anything. Before changing it, run
   every `run:` block you touch by hand in the clone under `bash -e` (GitHub's
   default shell, no pipefail), with the job's `env:` set and `RUNNER_TEMP`

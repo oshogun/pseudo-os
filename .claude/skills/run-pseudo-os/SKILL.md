@@ -17,7 +17,7 @@ All paths are relative to the repo root.
 ## Setup
 
 ```bash
-npm install
+npm ci
 ```
 
 Node 26 is what's installed here; the driver needs Node ≥ 22 (global
