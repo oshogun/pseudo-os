@@ -11,6 +11,7 @@ CC="$WASI_SDK/bin/clang --target=wasm32-wasip1 -Os -s"
 cd "$(dirname "$0")/.."
 
 for src in src/programs/*.c test/fixtures/wasm/*.c; do
+    [ -e "$src" ] || continue   # the pattern matched no file
     out="${src%.c}.wasm"
     echo "  $src -> $out"
     $CC -o "$out" "$src"
